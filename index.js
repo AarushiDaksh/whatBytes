@@ -19,7 +19,6 @@ app.use("/api/patients", patientRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/mappings", mappingRoutes);
 
-// must be LAST
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
