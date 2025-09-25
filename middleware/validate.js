@@ -1,18 +1,17 @@
 const validate =
-  (schema) =>
-  async (req, _res, next) => {
-    try {
-     
-      if (schema?.body) req.body = await schema.body.parseAsync(req.body);
-      if (schema?.params) req.params = await schema.params.parseAsync(req.params);
-      if (schema?.query) req.query = await schema.query.parseAsync(req.query);
-      if (!schema?.body && !schema?.params && !schema?.query) {
-        req.body = await schema.parseAsync(req.body);
-      }
-      next();
-    } catch (err) {
-      next(err);
+  (schema, which = "body") =>
+  (req, res, next) => {
+    if (!schema) return next();
+    const parsed = schema.safeParse(req[which]);
+    if (!parsed.success) {
+      return res.status(422).json({
+        status: "validation_error",
+        message: "Invalid input",
+        errors: parsed.error.format(),
+      });
     }
+    req[which] = parsed.data;
+    next();
   };
 
 module.exports = { validate };
