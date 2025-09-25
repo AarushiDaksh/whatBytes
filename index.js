@@ -28,12 +28,15 @@ app.use("/api/patients", patientRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/mappings", mappingRoutes);
 
+<<<<<<< HEAD
 // 404 fallback
 app.use((req, res) => {
   res.status(404).json({ status: "not_found", message: `Route ${req.method} ${req.originalUrl} not found` });
 });
 
 // centralized error handler
+=======
+>>>>>>> 42504b041ac59f58f204c2735f1c7e4e68e9aa9c
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
