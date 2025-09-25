@@ -1,27 +1,48 @@
+// src/middleware/schemas.js
 const { z } = require("zod");
 
 const registerSchema = z.object({
-  name: z.string().min(1, "name is required").max(80),
-  email: z.string().email("invalid email"),
-  password: z.string().min(6, "password must be at least 6 chars"),
+  name: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(6)
 });
 
 const loginSchema = z.object({
-  email: z.string().email("invalid email"),
-  password: z.string().min(1, "password required"),
+  email: z.string().email(),
+  password: z.string().min(1)
 });
 
-const setAdminParamsSchema = z.object({
-  id: z.string().regex(/^\d+$/).transform(Number),
+const patientCreateSchema = z.object({
+  name: z.string().min(1),
+  age: z.number().int().min(0),
+  disease: z.string().optional().nullable()
 });
 
-const setAdminBodySchema = z
-  .object({ action: z.enum(["grant", "revoke"]).optional() })
-  .optional();
+const patientUpdateSchema = patientCreateSchema.partial();
+
+const doctorCreateSchema = z.object({
+  name: z.string().min(1),
+  specialization: z.string().optional().nullable()
+});
+
+const doctorUpdateSchema = doctorCreateSchema.partial();
+
+const mappingCreateSchema = z.object({
+  doctorId: z.number().int().positive(),
+  patientId: z.number().int().positive()
+});
+
+const setAdminParamsSchema = z.object({ id: z.coerce.number().int().positive() });
+const setAdminBodySchema   = z.object({ action: z.enum(["grant", "revoke"]).default("grant") });
 
 module.exports = {
   registerSchema,
   loginSchema,
+  patientCreateSchema,
+  patientUpdateSchema,
+  doctorCreateSchema,
+  doctorUpdateSchema,
+  mappingCreateSchema,
   setAdminParamsSchema,
-  setAdminBodySchema,
+  setAdminBodySchema
 };

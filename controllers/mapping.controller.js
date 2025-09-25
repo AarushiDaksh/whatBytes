@@ -1,63 +1,46 @@
-const  prisma  = require("../prisma");
+const prisma = require("../prisma");
 
-// POST /api/mappings (assign doctor to patient)
-async function assignDoctor(req, res) {
-  const { patientId, doctorId } = req.body; // numbers
+async function createMapping(req, res) {
   try {
-    const patient = await prisma.patient.findUnique({ where: { id: Number(patientId) } });
-    const doctor  = await prisma.doctor.findUnique({ where: { id: Number(doctorId) } });
-    if (!patient || !doctor) {
-      return res.status(404).json({ status: "not_found", message: "Doctor or Patient not found" });
-    }
-
-    const mapping = await prisma.mapping.create({
-      data: { patientId: Number(patientId), doctorId: Number(doctorId) },
+    const m = await prisma.patientDoctor.create({
+      data: { doctorId: req.body.doctorId, patientId: req.body.patientId }
     });
-
-    return res.status(201).json({ status: "created", message: "Doctor assigned to patient successfully", data: mapping });
-  } catch (error) {
-    return res.status(500).json({ status: "unknown", message: `${error}` });
+    return res.status(201).json({ status: "created", message: "Mapping created", data: m });
+  } catch (e) {
+    return res.status(500).json({ status: "unknown", message: `Error: ${e}` });
   }
 }
 
-// GET /api/mappings
-async function getMappings(_req, res) {
-  try {
-    const mappings = await prisma.mapping.findMany({ include: { patient: true, doctor: true } });
-    return res.status(200).json({ status: "success", data: mappings });
-  } catch (error) {
-    return res.status(500).json({ status: "unknown", message: `${error}` });
-  }
+async function listForPatient(req, res) {
+  const patientId = Number(req.params.patientId);
+  const data = await prisma.patientDoctor.findMany({
+    where: { patientId },
+    include: { doctor: true }
+  });
+  return res.json({ status: "success", message: "OK", data });
 }
 
-// GET /api/mappings/:id (by patient id)
-async function getMappingForPatient(req, res) {
-  const patientId = Number(req.params.id);
-  try {
-    const mappings = await prisma.mapping.findMany({
-      where: { patientId },
-      include: { doctor: true },
-    });
-    return res.status(200).json({ status: "success", data: mappings });
-  } catch (error) {
-    return res.status(500).json({ status: "unknown", message: `${error}` });
-  }
-}
-
-// DELETE /api/mappings/:id (mapping row id)
-async function deleteDoctorFromPatientMappings(req, res) {
+async function removeMapping(req, res) {
   const id = Number(req.params.id);
-  try {
-    await prisma.mapping.delete({ where: { id } });
-    return res.status(200).json({ status: "success", message: "Mapping deleted successfully" });
-  } catch (error) {
-    return res.status(500).json({ status: "unknown", message: `${error}` });
-  }
+  const del = await prisma.patientDoctor.delete({ where: { id } });
+  return res.json({ status: "deleted", message: "Deleted", data: del });
 }
 
-module.exports = {
-  assignDoctor,
-  getMappings,
-  getMappingForPatient,
-  deleteDoctorFromPatientMappings,
-};
+/* Admin */
+async function adminListMappings(_req, res) {
+  const data = await prisma.patientDoctor.findMany({ include: { doctor: true, patient: true } });
+  return res.json({ status: "success", message: "All mappings", data });
+}
+async function adminGetMapping(req, res) {
+  const id = Number(req.params.id);
+  const data = await prisma.patientDoctor.findUnique({ where: { id }, include: { doctor: true, patient: true } });
+  if (!data) return res.status(404).json({ status: "not_found", message: "Not found" });
+  return res.json({ status: "success", message: "OK", data });
+}
+async function adminDeleteMapping(req, res) {
+  const id = Number(req.params.id);
+  const data = await prisma.patientDoctor.delete({ where: { id } });
+  return res.json({ status: "deleted", message: "Deleted", data });
+}
+
+module.exports = { createMapping, listForPatient, removeMapping, adminListMappings, adminGetMapping, adminDeleteMapping };

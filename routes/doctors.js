@@ -1,39 +1,23 @@
+// src/routes/doctors.js
 const express = require("express");
 const { validate } = require("../middleware/validate");
 const { auth, requireRole } = require("../middleware/auth");
 const {
-  createDoctor: createDoctorSchema,
-  updateDoctor: updateDoctorSchema,
-  idParam: doctorIdParam,
-} = require("../middleware/doctor.schemas");
-const {
-  createDoctor,
-  getDoctors,
-  getDoctor,
-  updateDoctor,
-  deleteDoctor,
+  createDoctor, getMyDoctor, updateMyDoctor, deleteMyDoctor,
+  adminListDoctors, adminGetDoctor, adminUpdateDoctor, adminDeleteDoctor
 } = require("../controllers/doctor.controller");
+const { doctorCreateSchema, doctorUpdateSchema } = require("../middleware/schemas");
 
 const router = express.Router();
+router.post("/", auth, validate(doctorCreateSchema), createDoctor);
+router.get("/:id", auth, getMyDoctor);
+router.put("/:id", auth, validate(doctorUpdateSchema), updateMyDoctor);
+router.delete("/:id", auth, deleteMyDoctor);
 
-// create needs admin
-router.post("/", auth, requireRole("admin"), validate(createDoctorSchema), createDoctor);
-
-// reads could be public or protected; keeping protected admin here for consistency:
-router.get("/", auth, requireRole("admin"), getDoctors);
-router.get("/:id", auth, requireRole("admin"), validate(doctorIdParam, "params"), getDoctor);
-
-router.put("/:id",
-  auth, requireRole("admin"),
-  validate(doctorIdParam, "params"),
-  validate(updateDoctorSchema),
-  updateDoctor
-);
-
-router.delete("/:id",
-  auth, requireRole("admin"),
-  validate(doctorIdParam, "params"),
-  deleteDoctor
-);
+/* Admin */
+router.get("/admin/all", auth, requireRole("admin"), adminListDoctors);
+router.get("/admin/:id", auth, requireRole("admin"), adminGetDoctor);
+router.put("/admin/:id", auth, requireRole("admin"), validate(doctorUpdateSchema), adminUpdateDoctor);
+router.delete("/admin/:id", auth, requireRole("admin"), adminDeleteDoctor);
 
 module.exports = router;

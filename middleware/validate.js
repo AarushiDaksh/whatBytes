@@ -1,17 +1,19 @@
+// src/middleware/validate.js
+const { ZodError } = require("zod");
+
 const validate =
-  (schema, which = "body") =>
+  (schema, where = "body") =>
   (req, res, next) => {
-    if (!schema) return next();
-    const parsed = schema.safeParse(req[which]);
-    if (!parsed.success) {
-      return res.status(422).json({
-        status: "validation_error",
-        message: "Invalid input",
-        errors: parsed.error.format(),
-      });
+    try {
+      if (!schema) return next();
+      req[where] = schema.parse(req[where]);
+      return next();
+    } catch (e) {
+      if (e instanceof ZodError) {
+        return res.status(400).json({ status: "invalid", message: "Validation failed", data: e.flatten() });
+      }
+      return res.status(400).json({ status: "invalid", message: "Invalid payload" });
     }
-    req[which] = parsed.data;
-    next();
   };
 
 module.exports = { validate };

@@ -1,64 +1,68 @@
-const  prisma  = require("../prisma");
+const prisma = require("../prisma");
 
-// POST /api/doctors
 async function createDoctor(req, res) {
-  const { name, specialization } = req.body;
   try {
-    const doctor = await prisma.doctor.create({
-      data: { name, specialization: specialization ?? null },
+    const doc = await prisma.doctor.create({
+      data: { name: req.body.name, specialization: req.body.specialization ?? null, createdById: req.user.id }
     });
-    return res.status(201).json({ status: "created", message: "Doctor created successfully", data: doctor });
-  } catch (error) {
-    return res.status(500).json({ status: "unknown", message: `${error}` });
+    return res.status(201).json({ status: "created", message: "Doctor created", data: doc });
+  } catch (e) {
+    return res.status(500).json({ status: "unknown", message: `Error: ${e}` });
   }
 }
 
-// GET /api/doctors
-async function getDoctors(_req, res) {
-  try {
-    const doctors = await prisma.doctor.findMany();
-    return res.status(200).json({ status: "success", data: doctors });
-  } catch (error) {
-    return res.status(500).json({ status: "unknown", message: `${error}` });
-  }
-}
-
-// GET /api/doctors/:id
-async function getDoctor(req, res) {
+async function getMyDoctor(req, res) {
   const id = Number(req.params.id);
-  try {
-    const doctor = await prisma.doctor.findUnique({ where: { id } });
-    if (!doctor) return res.status(404).json({ status: "not_found", message: "Doctor not found" });
-    return res.status(200).json({ status: "success", data: doctor });
-  } catch (error) {
-    return res.status(500).json({ status: "unknown", message: `${error}` });
-  }
+  const doc = await prisma.doctor.findFirst({ where: { id, OR: [{ createdById: req.user.id }, { createdById: null }] } });
+  if (!doc) return res.status(404).json({ status: "not_found", message: "Not found" });
+  return res.json({ status: "success", message: "OK", data: doc });
 }
 
-// PUT /api/doctors/:id
-async function updateDoctor(req, res) {
+async function updateMyDoctor(req, res) {
   const id = Number(req.params.id);
-  const { name, specialization } = req.body;
-  try {
-    const doctor = await prisma.doctor.update({
-      where: { id },
-      data: { name, specialization },
-    });
-    return res.status(200).json({ status: "success", message: "Doctor updated successfully", data: doctor });
-  } catch (error) {
-    return res.status(500).json({ status: "unknown", message: `${error}` });
-  }
+  const owned = await prisma.doctor.findFirst({ where: { id, createdById: req.user.id } });
+  if (!owned) return res.status(404).json({ status: "not_found", message: "Not found or not yours" });
+  const updated = await prisma.doctor.update({
+    where: { id },
+    data: { name: req.body.name, specialization: req.body.specialization ?? null }
+  });
+  return res.json({ status: "updated", message: "Doctor updated", data: updated });
 }
 
-// DELETE /api/doctors/:id
-async function deleteDoctor(req, res) {
+async function deleteMyDoctor(req, res) {
   const id = Number(req.params.id);
-  try {
-    await prisma.doctor.delete({ where: { id } });
-    return res.status(200).json({ status: "success", message: "Doctor deleted successfully" });
-  } catch (error) {
-    return res.status(500).json({ status: "unknown", message: `${error}` });
-  }
+  const owned = await prisma.doctor.findFirst({ where: { id, createdById: req.user.id } });
+  if (!owned) return res.status(404).json({ status: "not_found", message: "Not found or not yours" });
+  const del = await prisma.doctor.delete({ where: { id } });
+  return res.json({ status: "deleted", message: "Doctor deleted", data: del });
 }
 
-module.exports = { createDoctor, getDoctors, getDoctor, updateDoctor, deleteDoctor };
+/* Admin */
+async function adminListDoctors(_req, res) {
+  const data = await prisma.doctor.findMany();
+  return res.json({ status: "success", message: "All doctors", data });
+}
+async function adminGetDoctor(req, res) {
+  const id = Number(req.params.id);
+  const data = await prisma.doctor.findUnique({ where: { id } });
+  if (!data) return res.status(404).json({ status: "not_found", message: "Not found" });
+  return res.json({ status: "success", message: "OK", data });
+}
+async function adminUpdateDoctor(req, res) {
+  const id = Number(req.params.id);
+  const data = await prisma.doctor.update({
+    where: { id },
+    data: { name: req.body.name, specialization: req.body.specialization ?? null }
+  });
+  return res.json({ status: "updated", message: "Updated", data });
+}
+async function adminDeleteDoctor(req, res) {
+  const id = Number(req.params.id);
+  const data = await prisma.doctor.delete({ where: { id } });
+  return res.json({ status: "deleted", message: "Deleted", data });
+}
+
+module.exports = {
+  createDoctor, getMyDoctor, updateMyDoctor, deleteMyDoctor,
+  adminListDoctors, adminGetDoctor, adminUpdateDoctor, adminDeleteDoctor
+};
