@@ -35,14 +35,14 @@ model Doctor {
 }
 
 model Patient {
-  id         Int       @id @default(autoincrement())
-  name       String
-  age        Int
-  disease    String?
+  id          Int       @id @default(autoincrement())
+  name        String
+  age         Int
+  disease     String?
   createdById Int?
-  createdBy  User?     @relation("UserPatients", fields: [createdById], references: [id])
+  createdBy   User?     @relation("UserPatients", fields: [createdById], references: [id])
 
-  mappings   PatientDoctor[]
+  mappings    PatientDoctor[]
 
   @@map("Patient")
 }

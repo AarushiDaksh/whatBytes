@@ -43,4 +43,4 @@ async function adminDeleteMapping(req, res) {
   return res.json({ status: "deleted", message: "Deleted", data });
 }
 
-module.exports = { createMapping, listForPatient, removeMapping, adminListMappings, adminGetMapping, adminDeleteMapping };
+module.exports = { createMapping, listForPatient, removeMapping };

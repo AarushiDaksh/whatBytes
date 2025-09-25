@@ -84,5 +84,5 @@ async function adminDeletePatient(req, res) {
 
 module.exports = {
   createPatient, getMyPatient, updateMyPatient, deleteMyPatient,
-  adminListPatients, adminGetPatient, adminUpdatePatient, adminDeletePatient
+
 };

@@ -46,36 +46,6 @@ async function login(req, res) {
   }
 }
 
-async function setAdminRole(req, res) {
-  const id = Number(req.params.id);
-  const action = req.body?.action ?? "grant";
-  try {
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (!user) return res.status(404).json({ status: "not_found", message: "User not found" });
 
-    const current = Array.isArray(user.roles) ? user.roles : [];
-    const hasAdmin = current.includes("admin");
 
-    if (action === "grant") {
-      if (hasAdmin) return res.status(409).json({ status: "conflict", message: "User is already an admin" });
-      const updated = await prisma.user.update({
-        where: { id },
-        data: { roles: { set: [...new Set([...current, "admin"])] } },
-        select: { id: true, name: true, email: true, roles: true }
-      });
-      return res.status(200).json({ status: "success", message: "Admin role granted", data: updated });
-    } else {
-      if (!hasAdmin) return res.status(409).json({ status: "conflict", message: "User is not an admin" });
-      const updated = await prisma.user.update({
-        where: { id },
-        data: { roles: { set: current.filter(r => r !== "admin") } },
-        select: { id: true, name: true, email: true, roles: true }
-      });
-      return res.status(200).json({ status: "success", message: "Admin role revoked", data: updated });
-    }
-  } catch (error) {
-    return res.status(500).json({ status: "unknown", message: `Something went wrong. Details: ${error}` });
-  }
-}
-
-module.exports = { register, login, setAdminRole };
+module.exports = { register, login };

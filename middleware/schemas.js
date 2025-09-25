@@ -32,8 +32,6 @@ const mappingCreateSchema = z.object({
   patientId: z.number().int().positive()
 });
 
-const setAdminParamsSchema = z.object({ id: z.coerce.number().int().positive() });
-const setAdminBodySchema   = z.object({ action: z.enum(["grant", "revoke"]).default("grant") });
 
 module.exports = {
   registerSchema,
@@ -43,6 +41,4 @@ module.exports = {
   doctorCreateSchema,
   doctorUpdateSchema,
   mappingCreateSchema,
-  setAdminParamsSchema,
-  setAdminBodySchema
 };

@@ -37,32 +37,8 @@ async function deleteMyDoctor(req, res) {
   return res.json({ status: "deleted", message: "Doctor deleted", data: del });
 }
 
-/* Admin */
-async function adminListDoctors(_req, res) {
-  const data = await prisma.doctor.findMany();
-  return res.json({ status: "success", message: "All doctors", data });
-}
-async function adminGetDoctor(req, res) {
-  const id = Number(req.params.id);
-  const data = await prisma.doctor.findUnique({ where: { id } });
-  if (!data) return res.status(404).json({ status: "not_found", message: "Not found" });
-  return res.json({ status: "success", message: "OK", data });
-}
-async function adminUpdateDoctor(req, res) {
-  const id = Number(req.params.id);
-  const data = await prisma.doctor.update({
-    where: { id },
-    data: { name: req.body.name, specialization: req.body.specialization ?? null }
-  });
-  return res.json({ status: "updated", message: "Updated", data });
-}
-async function adminDeleteDoctor(req, res) {
-  const id = Number(req.params.id);
-  const data = await prisma.doctor.delete({ where: { id } });
-  return res.json({ status: "deleted", message: "Deleted", data });
-}
 
 module.exports = {
   createDoctor, getMyDoctor, updateMyDoctor, deleteMyDoctor,
-  adminListDoctors, adminGetDoctor, adminUpdateDoctor, adminDeleteDoctor
+ 
 };
